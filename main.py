@@ -2,8 +2,12 @@ from dotenv import load_dotenv
 from icalendar import Calendar
 from dateutil.rrule import rrulestr, rruleset
 from datetime import datetime, timedelta
+import logging
+import schedule
 import requests
 import pytz
+import time
+import sys
 import os
 
 def download_ics_to_bytes(url):
@@ -76,7 +80,27 @@ def msg_to_discord(msg):
     response = requests.patch(url, headers=headers, json=json_data)
     response.raise_for_status()
 
+def main():
+    try:
+        logger.info("Job executed")
+        ics_data = download_ics_to_bytes(os.getenv("CALENDAR_URL"))
+        msg = ics_bytes_to_msg(ics_data, int(os.getenv("DAY_RANGE")), os.getenv("TZ"))
+        msg_to_discord(msg)
+    except Exception as e:
+        logger.exception("An error occurred: ")
+
 load_dotenv()
-ics_data = download_ics_to_bytes(os.getenv("CALENDAR_URL"))
-msg = ics_bytes_to_msg(ics_data, int(os.getenv("DAY_RANGE")), os.getenv("TZ"))
-msg_to_discord(msg)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s: %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+
+logger = logging.getLogger(__name__)
+
+schedule.every(int(os.getenv("FREQ_HOURS_INTERVAL"))).hours.do(main)
+
+while True:
+    schedule.run_pending()
+    time.sleep(1)
