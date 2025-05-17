@@ -65,7 +65,7 @@ def ics_bytes_to_msg(ics_data, day_range, tz):
     return msg
 
 def msg_to_discord(msg):
-    url = os.getenv("DISCORD_URL")
+    url = os.getenv("DISCORD_BASEPATH") + "/channels/" + os.getenv("DISCORD_CHANNEL_ID") + "/messages/" + os.getenv("DISCORD_MESSAGE_ID")
 
     headers = {
         "Authorization": "Bot " + os.getenv("DISCORD_BOT_TOKEN"),
